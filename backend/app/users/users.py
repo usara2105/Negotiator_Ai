@@ -1,34 +1,34 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
+from app.storage.memory_db import USERS
 
 router = APIRouter()
-USERS = {}
 
 
-class AvailabilitySlot(BaseModel):
+class Availability(BaseModel):
     day: str
     start: int
     end: int
 
 
 class Preferences(BaseModel):
-    preferred_time_of_day: str
-    avoided_days: List[str]
+    preferred_time: str
     max_duration: int
     flexibility: str
+    avoid_days: List[str]
 
 
 class UserProfile(BaseModel):
     slack_id: str
-    availability: List[AvailabilitySlot]
+    availability: List[Availability]
     preferences: Preferences
 
 
 @router.post("/profile")
 def save_profile(profile: UserProfile):
     USERS[profile.slack_id] = profile.dict()
-    return {"status": "saved"}
+    return {"status": "saved", "slack_id": profile.slack_id}
 
 
 @router.get("/profile/{slack_id}")

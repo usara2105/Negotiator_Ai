@@ -1,55 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
 
         <activity
             android:name=".ui.preferences.PreferencesActivity"
-            android:label="Preferences"
-            android:theme="@style/Theme.MyApplication.WithActionBar" />
+            android:exported="false" />
 
-        <!-- 🚀 App entry point -->
         <activity
             android:name=".LoginActivity"
             android:exported="true">
+
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
-            <!-- Slack OAuth redirect -->
+            <!-- Slack OAuth Redirect -->
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
                 <data
                     android:scheme="negotiator"
-                    android:host="slack-auth" />
+                    android:host="slack-auth"/>
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".CreateMeetingActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".MeetingActivity"
-            android:exported="false" />
+        <activity android:name=".MainActivity"/>
+        <activity android:name=".CreateMeetingActivity"/>
+        <activity android:name=".MeetingActivity"/>
 
     </application>
-
 </manifest>

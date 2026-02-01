@@ -6,18 +6,24 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+
+import okhttp3.*;
+
+import org.json.JSONObject;
+
+import java.io.IOException;
 
 public class LoginActivity extends AppCompatActivity {
+
+    private static final String SLACK_CLIENT_ID = "YOUR_SLACK_CLIENT_ID";
+    private static final String REDIRECT_URI = "negotiator://slack-auth";
+    private static final String BACKEND_URL = "http://10.0.2.2:8000/auth/slack";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         SessionManager sessionManager = new SessionManager(this);
         if (sessionManager.isLoggedIn()) {
             startActivity(new Intent(this, MainActivity.class));
@@ -25,26 +31,21 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+        Button btnSlackLogin = findViewById(R.id.btnSlackLogin);
+
+        btnSlackLogin.setOnClickListener(v -> {
+            String url =
+                    "https://slack.com/oauth/v2/authorize"
+                            + "?client_id=" + SLACK_CLIENT_ID
+                            + "&scope=openid,profile,users:read"
+                            + "&redirect_uri=" + REDIRECT_URI;
+
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
         });
 
-        Button btnSlackLogin = findViewById(R.id.btnSlackLogin);
-        btnSlackLogin.setOnClickListener(v -> {
-            // Mocking Slack OAuth for now or redirecting to URL
-            // In a real app, you'd trigger the OAuth flow here
-            // For demonstration, let's just "log in"
-            sessionManager.saveSlackUser("U12345", "Test User");
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            finish();
-        });
-        
-        // Handle OAuth Redirect if applicable
         handleIntent(getIntent());
     }
 
@@ -55,17 +56,53 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void handleIntent(Intent intent) {
-        if (intent != null && intent.getData() != null) {
-            Uri data = intent.getData();
-            if ("negotiator".equals(data.getScheme()) && "slack-auth".equals(data.getHost())) {
-                String code = data.getQueryParameter("code");
-                if (code != null) {
-                    // Exchange code for token and save user
-                    new SessionManager(this).saveSlackUser("U_FROM_OAUTH", "OAuth User");
-                    startActivity(new Intent(this, MainActivity.class));
-                    finish();
-                }
+        Uri data = intent.getData();
+        if (data == null) return;
+
+        if ("negotiator".equals(data.getScheme())) {
+            String code = data.getQueryParameter("code");
+            if (code != null) {
+                exchangeCodeWithBackend(code);
             }
         }
+    }
+
+    private void exchangeCodeWithBackend(String code) {
+        OkHttpClient client = new OkHttpClient();
+
+        RequestBody body = new FormBody.Builder()
+                .add("code", code)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(BACKEND_URL)
+                .post(body)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                runOnUiThread(() ->
+                        Toast.makeText(LoginActivity.this,
+                                "Login failed", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    JSONObject json = new JSONObject(response.body().string());
+                    String slackId = json.getString("slack_id");
+                    String name = json.getString("name");
+
+                    new SessionManager(LoginActivity.this)
+                            .saveSlackUser(slackId, name);
+
+                    runOnUiThread(() -> {
+                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                        finish();
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }

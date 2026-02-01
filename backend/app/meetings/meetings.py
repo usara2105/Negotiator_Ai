@@ -16,9 +16,9 @@ class MeetingRequest(BaseModel):
 
 
 @router.post("/schedule")
-def schedule(req: MeetingRequest):
+def schedule_meeting(req: MeetingRequest):
     if req.user_a not in USERS or req.user_b not in USERS:
-        raise HTTPException(status_code=404, detail="User profile missing")
+        raise HTTPException(status_code=404, detail="User not found")
 
     context = {
         "user_a": USERS[req.user_a],
@@ -41,7 +41,6 @@ def schedule(req: MeetingRequest):
         return {"status": "NO_OVERLAP"}
 
     meeting_id = str(uuid.uuid4())
-
     MEETINGS[meeting_id] = {
         "users": [req.user_a, req.user_b],
         "day": result["day"],
