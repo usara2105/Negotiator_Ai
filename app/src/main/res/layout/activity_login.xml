@@ -14,11 +14,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
+    <!-- Real Slack Login -->
     <Button
         android:id="@+id/btnSlackLogin"
         android:text="Continue with Slack"
         android:textColor="@android:color/white"
         android:backgroundTint="#4A154B"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Demo Login -->
+    <Button
+        android:id="@+id/btnDemoLogin"
+        android:text="Continue in Demo Mode"
+        android:layout_marginTop="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

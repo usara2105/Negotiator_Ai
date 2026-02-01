@@ -34,7 +34,11 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         Button btnSlackLogin = findViewById(R.id.btnSlackLogin);
+        Button btnDemoLogin = findViewById(R.id.btnDemoLogin);
 
+        // -------------------------------
+        // REAL SLACK LOGIN
+        // -------------------------------
         btnSlackLogin.setOnClickListener(v -> {
             String url =
                     "https://slack.com/oauth/v2/authorize"
@@ -42,8 +46,26 @@ public class LoginActivity extends AppCompatActivity {
                             + "&scope=openid,profile,users:read"
                             + "&redirect_uri=" + REDIRECT_URI;
 
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            startActivity(intent);
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        });
+
+        // -------------------------------
+        // DEMO LOGIN (NO SLACK)
+        // -------------------------------
+        btnDemoLogin.setOnClickListener(v -> {
+            sessionManager.saveSlackUser(
+                    "DEMO_USER",
+                    "Demo User"
+            );
+
+            Toast.makeText(
+                    this,
+                    "Demo mode enabled",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
         });
 
         handleIntent(getIntent());
@@ -80,13 +102,19 @@ public class LoginActivity extends AppCompatActivity {
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Call call, IOException e) {
+            @Override
+            public void onFailure(Call call, IOException e) {
                 runOnUiThread(() ->
-                        Toast.makeText(LoginActivity.this,
-                                "Login failed", Toast.LENGTH_SHORT).show());
+                        Toast.makeText(
+                                LoginActivity.this,
+                                "Slack login failed",
+                                Toast.LENGTH_SHORT
+                        ).show()
+                );
             }
 
-            @Override public void onResponse(Call call, Response response) throws IOException {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
                 try {
                     JSONObject json = new JSONObject(response.body().string());
                     String slackId = json.getString("slack_id");
@@ -99,6 +127,7 @@ public class LoginActivity extends AppCompatActivity {
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
                         finish();
                     });
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
