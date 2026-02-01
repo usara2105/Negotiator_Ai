@@ -11,7 +11,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
-        <activity android:name=".ui.preferences.PreferencesActivity" />
+
+        <activity
+            android:name=".ui.preferences.PreferencesActivity"
+            android:label="Preferences"
+            android:theme="@style/Theme.MyApplication.WithActionBar" />
 
         <!-- 🚀 App entry point -->
         <activity

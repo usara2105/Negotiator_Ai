@@ -1,34 +1,38 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 
 router = APIRouter()
+USERS = {}
 
-# In-memory store (OK for hackathon)
-USER_PROFILES = {}
 
-# ---------- MODELS ----------
+class AvailabilitySlot(BaseModel):
+    day: str
+    start: int
+    end: int
+
 
 class Preferences(BaseModel):
-    preferred_time_of_day: str        # morning | afternoon | evening | any
-    avoided_days: List[str]           # ["Monday", "Sunday"]
-    max_duration: int                 # minutes
-    flexibility: str                  # strict | flexible | very_flexible
+    preferred_time_of_day: str
+    avoided_days: List[str]
+    max_duration: int
+    flexibility: str
+
 
 class UserProfile(BaseModel):
     slack_id: str
-    availability: List[str] = []
+    availability: List[AvailabilitySlot]
     preferences: Preferences
 
-# ---------- ROUTES ----------
 
 @router.post("/profile")
 def save_profile(profile: UserProfile):
-    USER_PROFILES[profile.slack_id] = profile.dict()
-    return {"status": "saved", "slack_id": profile.slack_id}
+    USERS[profile.slack_id] = profile.dict()
+    return {"status": "saved"}
+
 
 @router.get("/profile/{slack_id}")
 def get_profile(slack_id: str):
-    if slack_id not in USER_PROFILES:
+    if slack_id not in USERS:
         raise HTTPException(status_code=404, detail="User not found")
-    return USER_PROFILES[slack_id]
+    return USERS[slack_id]

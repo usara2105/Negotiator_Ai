@@ -6,4 +6,10 @@
     </style>
 
     <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />
+
+    <!-- Theme for Activities that need an Action Bar -->
+    <style name="Theme.MyApplication.WithActionBar" parent="Theme.Material3.DayNight">
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+    </style>
 </resources>

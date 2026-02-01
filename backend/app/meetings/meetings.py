@@ -1,6 +1,3 @@
-from app.database import save_meeting
-from app.notifications.slack_notifier import send_slack_message
-from app.notifications.reminder_scheduler import schedule_reminder
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.storage.memory_db import USERS, MEETINGS
@@ -11,10 +8,12 @@ import uuid
 router = APIRouter()
 orchestrator = OrchestratorClient()
 
+
 class MeetingRequest(BaseModel):
     user_a: str
     user_b: str
     duration: int
+
 
 @router.post("/schedule")
 def schedule(req: MeetingRequest):
@@ -27,27 +26,32 @@ def schedule(req: MeetingRequest):
         "duration": req.duration
     }
 
-    # 🔥 CORE DECISION BY ORCHESTRATE
     decision = orchestrator.decide_meeting(context)
 
-    # Fallback OR demo-safe path
-    result = negotiate(
-        USERS[req.user_a],
-        USERS[req.user_b],
-        req.duration
-    )
+    if decision.get("decision") == "CONFIRMED":
+        result = decision["result"]
+    else:
+        result = negotiate(
+            USERS[req.user_a],
+            USERS[req.user_b],
+            req.duration
+        )
 
     if result["status"] == "NO_OVERLAP":
-        return {
-            "status": "NO_OVERLAP",
-            "message": "User A tried to schedule a meeting with you"
-        }
+        return {"status": "NO_OVERLAP"}
 
     meeting_id = str(uuid.uuid4())
-    MEETINGS[meeting_id] = result
+
+    MEETINGS[meeting_id] = {
+        "users": [req.user_a, req.user_b],
+        "day": result["day"],
+        "start": result["start"],
+        "end": result["end"],
+        "status": "CONFIRMED"
+    }
 
     return {
         "status": "CONFIRMED",
         "meeting_id": meeting_id,
-        "details": result
+        "details": MEETINGS[meeting_id]
     }

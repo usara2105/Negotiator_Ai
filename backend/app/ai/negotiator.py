@@ -1,7 +1,10 @@
 def negotiate(user_a, user_b, duration):
     """
-    Deterministic reasoning skill.
-    Orchestrate CALLS this, not the other way around.
+    Deterministic fallback scheduler.
+    availability format:
+    [
+      {"day": "Monday", "start": 14, "end": 17}
+    ]
     """
 
     for a in user_a["availability"]:
@@ -14,9 +17,8 @@ def negotiate(user_a, user_b, duration):
                     return {
                         "status": "CONFIRMED",
                         "day": a["day"],
-                        "start": start
+                        "start": start,
+                        "end": start + duration
                     }
 
-    return {
-        "status": "NO_OVERLAP"
-    }
+    return {"status": "NO_OVERLAP"}
